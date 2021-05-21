@@ -64,6 +64,7 @@ Replace the leg configuration in the buildArms function with your own, the param
 {
     { 
         gaitCenter = Vector3 : center point of the gait relative to the leg attachment point, 
+        phase = float : a value between 0 and 1 to offset the phase of this leg, default is 0 and 0.5 alternating between each leg,
         segments = { 
             { 
                 len = Vector3 : legth of the first segment between its spinner and the sencod segment spinner, 
@@ -88,5 +89,7 @@ Note on this configuration :
 * Big walker (150+ span between legs) will break the game physics and cause 10x slow down when walking.
 * Small and light walker does not work very well with the physics en the game, use lead if necessary.
 * Each leg need multiple sticky foot, add more if necessary.
+* The coordinate system used to reference relative position is defined as (x, y, z) for (right, top, forward).
+* A gait is a trajectory of the foot relative to the attachment point of the leg.
 # Contributing
 If you wish to contribute by proposing evolution, pointing bug or making grammatical change to this guide, please open a github issue or propose a pull request for trivial changes.

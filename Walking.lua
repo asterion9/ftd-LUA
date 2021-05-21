@@ -20,23 +20,25 @@ function Update(I)
 end
 
 function buildArms(I)
-    --Bishop test 6 legs
-    local segment0Right = { len = Vector3(0, 0, 4), spinOffset = 0, spinDirection = -1 }
-    local segment0Left = { len = Vector3(0, 0, 4), spinOffset = 180, spinDirection = -1 }
-    local segment1 = { len = Vector3(0, 0, 5), spinOffset = 0, spinDirection = -1 }
-    local segment2 = { len = Vector3(1, 0, 5.5), spinOffset = 0, spinDirection = -1 }
+    --marauder 8 legs
+    local segment0Right = { len = Vector3(0, -2, 5), spinOffset = 0, spinDirection = -1 }
+    local segment0Left = { len = Vector3(0, -2, 5), spinOffset = 180, spinDirection = -1 }
+    local segment1 = { len = Vector3(0, 0, 5), spinOffset = 0, spinDirection = 1 }
+    local segment2 = { len = Vector3(0, 3, 10.5), spinOffset = -16, spinDirection = 1 }
     return PrefabLegBuilder.buildLegs(I,
             {
-                { gaitCenter = Vector3(7, -3, -5), segments = { segment0Right, segment1, segment2 } }, -- bottom right
-                { gaitCenter = Vector3(9, -3, 0), segments = { segment0Right, segment1, segment2 } }, -- middle right
-                { gaitCenter = Vector3(7, -3, 5), segments = { segment0Right, segment1, segment2 } }, -- top right
-                { gaitCenter = Vector3(-7, -3, 5), segments = { segment0Left, segment1, segment2 } }, -- top left
-                { gaitCenter = Vector3(-9, -3, 0), segments = { segment0Left, segment1, segment2 } }, -- middle left
-                { gaitCenter = Vector3(-7, -3, -5), segments = { segment0Left, segment1, segment2 } }  -- bottom left
+                { gaitCenter = Vector3(12, -8, -2), segments = { segment0Right, segment1, segment2 } }, -- bottom right
+                { gaitCenter = Vector3(12, -8, 0), segments = { segment0Right, segment1, segment2 } }, -- middle bottom right
+                { gaitCenter = Vector3(12, -8, 0), segments = { segment0Right, segment1, segment2 } }, -- middle top right
+                { gaitCenter = Vector3(12, -8, 2), segments = { segment0Right, segment1, segment2 } }, -- top right
+                { gaitCenter = Vector3(-12, -8, 2), segments = { segment0Left, segment1, segment2 } }, -- top left
+                { gaitCenter = Vector3(-12, -8, 0), segments = { segment0Left, segment1, segment2 } }, -- middle top left
+                { gaitCenter = Vector3(-12, -8, 0), segments = { segment0Left, segment1, segment2 } }, -- middle bottom left
+                { gaitCenter = Vector3(-12, -8, -2), segments = { segment0Left, segment1, segment2 } }  -- bottom left
             })
 end
 
--- WIP : adjust each legs height individually by checking the terrain height, acting as a manual suspension
+-- WIP : adjust each leg height individually by checking the terrain height, acting as a manual suspension
 Adjuster = {
     new = function(I, legs)
         return {
@@ -188,7 +190,7 @@ Controller = {
         }
     end
 }
- -- wrap a value to smooth the output so that changes are not to drastic
+-- wrap a value to smooth the output so that changes are not to drastic
 Smoother = {
     new = function()
         return {
@@ -361,10 +363,10 @@ Gait = {
             else
                 rotCenter = Vector3(-spinPosition.x, leg.gaitCenter.y, -spinPosition.z)
                 rotRadius = Vector3.Distance(rotCenter, leg.gaitCenter)
-                angleOffset = 2 * math.pi * Vector3.SignedAngle(Vector3.ProjectOnPlane(leg.gaitCenter, Vector3.up), Vector3.right, Vector3.up) / 360
+                angleOffset = 2 * math.pi * Vector3.SignedAngle(Vector3.ProjectOnPlane(spinPosition + leg.gaitCenter, Vector3.up), Vector3.right, Vector3.up) / 360
             end
 
-            I:Log(string.format("creating turning gait for leg %s, rotating around %s with radius %f and direction %f", tostring(leg.position), tostring(rotCenter), rotRadius, angleOffset))
+            I:Log(string.format("creating turning gait for leg %s, rotating around %s with radius %f and offset %f", tostring(leg.position), tostring(rotCenter), rotRadius, angleOffset))
 
             return Gait.Turning.new(rotCenter,
                     rotRadius,
