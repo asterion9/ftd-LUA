@@ -4,7 +4,7 @@ The goal of this project is to create walking vehicles that can be driven by the
 use the sticky foot as propulsion, have realistic leg movements, 
 and don't rely on powered stabilization or propulsion.
 
-![land marauder demo](https://raw.githubusercontent.com/asterion9/ftd-LUA//master/resources/sea_cpt-rambot_land-marauder.webm "Land Marauder Demo")
+[![walking Marauder Demo](http://img.youtube.com/vi/1kIcjcPTpyM/0.jpg)](https://www.youtube.com/watch?v=1kIcjcPTpyM "Land Marauder Demo")
 
 ## Operation
 This is achieved via the LUA box component. 
