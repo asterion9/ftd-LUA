@@ -1,11 +1,10 @@
 # Presentation
+Youtube video :
+[![walking Marauder Video](http://img.youtube.com/vi/1kIcjcPTpyM/0.jpg)](https://www.youtube.com/watch?v=1kIcjcPTpyM "Land Marauder Demo")
 ## Objective
 The goal of this project is to create walking vehicles that can be driven by the AI or the player, 
 use the sticky foot as propulsion, have realistic leg movements, 
 and don't rely on powered stabilization or propulsion.
-
-[![walking Marauder Demo](http://img.youtube.com/vi/1kIcjcPTpyM/0.jpg)](https://www.youtube.com/watch?v=1kIcjcPTpyM "Land Marauder Demo")
-
 ## Operation
 This is achieved via the LUA box component. 
 The code will first look for spinner placed in succession that form legs, 
@@ -16,11 +15,12 @@ calculate the position of the tip of the leg relative to its attachment point fo
 convert the desired position in angles for each spinner using an inverse kinematic model,
 move the spinner to the desired angle.
 # How to use
+Here is a blueprint of a Land Marauder with legs grafted on it as a demonstration vehicle. 
+The script provided in the repo is tuned for this craft.
+[Land Marauder Blueprint](resources/Land Marauder.blueprint)
 ## Legs
 ### Kinematic structure
-
 ![leg](resources/leg-joint.png "Leg With Joints")
-
 A leg is composed of 3 segments, each segment starts with a spinner, followed by a straight line to the next segment.
 The first segment starts by a vertical spinner pointing to the right, with blocks going in this direction,
 The second segment attaches at the end of the first segment with a horizontal spinner, 
