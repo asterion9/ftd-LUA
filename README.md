@@ -3,6 +3,9 @@
 The goal of this project is to create walking vehicles that can be driven by the AI or the player, 
 use the sticky foot as propulsion, have realistic leg movements, 
 and don't rely on powered stabilization or propulsion.
+
+![land marauder demo](resources/sea_cpt-rambot_land-marauder.webm "Land Marauder Demo")
+
 ## Operation
 This is achieved via the LUA box component. 
 The code will first look for spinner placed in succession that form legs, 
@@ -15,6 +18,9 @@ move the spinner to the desired angle.
 # How to use
 ## Legs
 ### Kinematic structure
+
+![leg](resources/leg-joint.png "Leg With Joints")
+
 A leg is composed of 3 segments, each segment starts with a spinner, followed by a straight line to the next segment.
 The first segment starts by a vertical spinner pointing to the right, with blocks going in this direction,
 The second segment attaches at the end of the first segment with a horizontal spinner, 
