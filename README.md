@@ -17,7 +17,7 @@ move the spinner to the desired angle.
 # How to use
 Here is a blueprint of a Land Marauder with legs grafted on it as a demonstration vehicle. 
 The script provided in the repo is tuned for this craft.
-[Land Marauder Blueprint](resources/Land Marauder.blueprint)
+[Land Marauder Blueprint](resources/Land_Marauder.blueprint)
 ## Legs
 ### Kinematic structure
 ![leg](resources/leg-joint.png "Leg With Joints")
