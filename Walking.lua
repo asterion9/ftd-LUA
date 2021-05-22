@@ -21,20 +21,20 @@ end
 
 function buildArms(I)
     --marauder 8 legs
-    local segment0Right = { len = Vector3(0, -2, 5), spinOffset = 0, spinDirection = -1 }
-    local segment0Left = { len = Vector3(0, -2, 5), spinOffset = 180, spinDirection = -1 }
-    local segment1 = { len = Vector3(0, 0, 5), spinOffset = 0, spinDirection = 1 }
-    local segment2 = { len = Vector3(0, 3, 10.5), spinOffset = -16, spinDirection = 1 }
+    local segment0Right = { len = Vector3(0, -4, 4), spinOffset = 0, spinDirection = -1 }
+    local segment0Left = { len = Vector3(0, -4, 4), spinOffset = 180, spinDirection = -1 }
+    local segment1 = { len = Vector3(0, 0, 6), spinOffset = 0, spinDirection = 1 }
+    local segment2 = { len = Vector3(0, 4, 11.5), spinOffset = -19.2, spinDirection = -1 }
     return PrefabLegBuilder.buildLegs(I,
             {
-                { gaitCenter = Vector3(12, -8, -2), segments = { segment0Right, segment1, segment2 } }, -- bottom right
-                { gaitCenter = Vector3(12, -8, 0), segments = { segment0Right, segment1, segment2 } }, -- middle bottom right
-                { gaitCenter = Vector3(12, -8, 0), segments = { segment0Right, segment1, segment2 } }, -- middle top right
-                { gaitCenter = Vector3(12, -8, 2), segments = { segment0Right, segment1, segment2 } }, -- top right
-                { gaitCenter = Vector3(-12, -8, 2), segments = { segment0Left, segment1, segment2 } }, -- top left
-                { gaitCenter = Vector3(-12, -8, 0), segments = { segment0Left, segment1, segment2 } }, -- middle top left
-                { gaitCenter = Vector3(-12, -8, 0), segments = { segment0Left, segment1, segment2 } }, -- middle bottom left
-                { gaitCenter = Vector3(-12, -8, -2), segments = { segment0Left, segment1, segment2 } }  -- bottom left
+                { gaitCenter = Vector3(8.5, -7.5, -5), segments = { segment0Right, segment1, segment2 } }, -- bottom right
+                { gaitCenter = Vector3(10, -7.5, 0), segments = { segment0Right, segment1, segment2 } }, -- middle bottom right
+                { gaitCenter = Vector3(10, -7.5, 0), segments = { segment0Right, segment1, segment2 } }, -- middle top right
+                { gaitCenter = Vector3(8.5, -7.5, 5), segments = { segment0Right, segment1, segment2 } }, -- top right
+                { gaitCenter = Vector3(-8.5, -7.5, 5), segments = { segment0Left, segment1, segment2 } }, -- top left
+                { gaitCenter = Vector3(-10, -7.5, 0), segments = { segment0Left, segment1, segment2 } }, -- middle top left
+                { gaitCenter = Vector3(-10, -7.5, 0), segments = { segment0Left, segment1, segment2 } }, -- middle bottom left
+                { gaitCenter = Vector3(-8.5, -7.5, -5), segments = { segment0Left, segment1, segment2 } }  -- bottom left
             })
 end
 
@@ -322,7 +322,7 @@ Gait = {
             I:Log(string.format("creating walking gait for leg %s, centered at %s with width %f", tostring(leg.position), tostring(position), leg.segments[3].len.z * 1.2))
 
             return Gait.Walking.new(position,
-                    angle, math.max(leg.segments[3].len.z * 0.5, GAIT_MIN_HEIGHT), math.sqrt(position.x * position.x + position.z * position.z))
+                    angle, math.max(leg.segments[2].len.z * 0.5, GAIT_MIN_HEIGHT), math.sqrt(position.x * position.x + position.z * position.z))
         end
     },
     -- turning gait, composed of a circle arc on the ground and a elliptic circle arc to return to origin
@@ -372,7 +372,7 @@ Gait = {
                     rotRadius,
                     angleOffset + math.pi / 12,
                     -math.pi / 6,
-                    math.max(leg.segments[3].len.z * 0.5, GAIT_MIN_HEIGHT)
+                    math.max(leg.segments[2].len.z * 0.5, GAIT_MIN_HEIGHT)
             )
         end
     },
