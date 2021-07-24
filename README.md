@@ -28,7 +28,7 @@ and the third segment attaches to the second with a horizontal spinner and block
 ### Sticky foot
 Sticky foot produces thrust when moving relative to the ground, they are to be placed on the last segment near the tip.
 Horizontal orientation does not matter, here are the recommended configuration :
-* Clearance : sphere of influence of the sticky foot, usually 0.5 or 1m for a sticky foot touching the ground, more should be ok too.
+* Clearance : sphere of influence of the sticky foot, usually 0.5 or 1m for a sticky foot touching the ground. Clearance should be carefully tuned, using more than needed will allow the leg to push on the ground even when not touching, which can cause major wobbling.
 * Stickiness : how long will it keep producing thrust after leaving the clearance zone, set to 100.
 * Forward/Backward : configure like a thruster, eg : left foot is pushing forward when going forward, driving positive or yawing right and pushing backward when going backward, driving negative or yawing left.
 ### Wheel
