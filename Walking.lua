@@ -475,10 +475,16 @@ PrefabLegBuilder = {
         for i = 1, #legTemplate.segments do
             length = length + legTemplate.segments[i].len.magnitude
         end
+        local ikModel
+        if legTemplate.ikModel == IK_MODEL.HUMAN then
+            ikModel = IkLib.moveHumanoidLeg
+        else
+            ikModel = IkLib.moveInsectoidLeg
+        end
         local leg = {
             position = sc.LocalPositionRelativeToCom,
             segments = {},
-            moveLeg = IkLib.move3SegmentsLeg,
+            moveLeg = ikModel,
             gaitCenter = legTemplate.gaitCenter,
             length = length
         }
@@ -509,7 +515,7 @@ PrefabLegBuilder = {
 
 -- helper lib for doing inverse kinematic using a leg config
 IkLib = {
-    move3SegmentsLeg = function(leg, I, target, t)
+    moveInsectoidLeg = function(leg, I, target, t)
         if target.magnitude > leg.length then
             I:LogToHud(string.format("ERROR : target %s is too far for leg %s !", tostring(target), leg.segments[1].spinId))
         end
@@ -522,6 +528,36 @@ IkLib = {
 
         local rx = target.x / math.cos(a0) - leg.segments[1].len.z
         local ry = target.y
+        local rMag = math.sqrt(rx * rx + ry * ry)
+
+        local a1 = (ry > 0 and 1 or -1) * math.acos(rx / rMag)
+                + math.acos(
+                (leg.segments[2].len.z * leg.segments[2].len.z + rMag * rMag - leg.segments[3].len.z * leg.segments[3].len.z)
+                        / (2 * leg.segments[2].len.z * rMag))
+
+        local a2 = -math.acos((rMag * rMag - leg.segments[2].len.z * leg.segments[2].len.z - leg.segments[3].len.z * leg.segments[3].len.z)
+                / (2 * leg.segments[2].len.z * leg.segments[3].len.z))
+
+        I:Log(string.format('t=%f : moving leg %d at %s, offset=%d, spinDir=%d to %s with angle a0=%f, a1=%f, a2=%f',
+                t, leg.segments[1].spinId, tostring(leg.position), leg.segments[1].spinOffset, leg.segments[1].spinDirection, tostring(target), a0, a1, a2))
+
+        leg.segments[1]:setAngle(I, a0, t)
+        leg.segments[2]:setAngle(I, a1, t)
+        leg.segments[3]:setAngle(I, a2, t)
+    end,
+    moveHumanoidLeg = function(leg, I, target, t)
+        if target.magnitude > leg.length then
+            I:LogToHud(string.format("ERROR : target %s is too far for leg %s !", tostring(target), leg.segments[1].spinId))
+        end
+
+        if target.magnitude < leg.segments[1].len.z then
+            I:LogToHud(string.format("ERROR : target %s is too close for leg %s !", tostring(target), leg.segments[1].spinId))
+        end
+
+        local a0 = (target.x > 0 and 1 or -1) * math.acos(-target.y / math.sqrt(target.x * target.x + target.y * target.y))
+
+        local rx = -target.y / math.cos(a0) - leg.segments[1].len.z
+        local ry = -target.z
         local rMag = math.sqrt(rx * rx + ry * ry)
 
         local a1 = (ry > 0 and 1 or -1) * math.acos(rx / rMag)
