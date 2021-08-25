@@ -8,7 +8,7 @@ INPUT_SPINNER_POWER = 0.5  -- the power expected on the input spinners (0 > powe
 -- higher is faster but risk maxing out the spinner speed and hitting ground too strongly (and looking weird)
 GAIT_GROUND_RATIO = 0.7
 GAIT_MIN_HEIGHT = 3  -- min height for the return move of the gait
-
+IK_MODEL = {INSECT = 1, HUMAN = 2}
 
 controller = nil
 
@@ -544,7 +544,7 @@ IkLib = {
         local a2 = -math.acos((rMag * rMag - leg.segments[2].len.z * leg.segments[2].len.z - leg.segments[3].len.z * leg.segments[3].len.z)
                 / (2 * leg.segments[2].len.z * leg.segments[3].len.z))
 
-        I:Log(string.format('t=%f : moving leg %d at %s, offset=%d, spinDir=%d to %s with angle a0=%f, a1=%f, a2=%f',
+        I:Log(string.format('t=%f : moving insectoid leg %d at %s, offset=%d, spinDir=%d to %s with angle a0=%f, a1=%f, a2=%f',
                 t, leg.segments[1].spinId, tostring(leg.position), leg.segments[1].spinOffset, leg.segments[1].spinDirection, tostring(target), a0, a1, a2))
 
         leg.segments[1]:setAngle(I, a0, t)
@@ -574,7 +574,7 @@ IkLib = {
         local a2 = -math.acos((rMag * rMag - leg.segments[2].len.z * leg.segments[2].len.z - leg.segments[3].len.z * leg.segments[3].len.z)
                 / (2 * leg.segments[2].len.z * leg.segments[3].len.z))
 
-        I:Log(string.format('t=%f : moving leg %d at %s, offset=%d, spinDir=%d to %s with angle a0=%f, a1=%f, a2=%f',
+        I:Log(string.format('t=%f : moving humanoid leg %d at %s, offset=%d, spinDir=%d to %s with angle a0=%f, a1=%f, a2=%f',
                 t, leg.segments[1].spinId, tostring(leg.position), leg.segments[1].spinOffset, leg.segments[1].spinDirection, tostring(target), a0, a1, a2))
 
         leg.segments[1]:setAngle(I, a0, t)
