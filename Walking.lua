@@ -319,12 +319,12 @@ Gait = {
                 position = leg.gaitCenter
             end
 
-            local actionRayon = math.sqrt(math.power(position.y, 2) + math.power(leg.length, 2)) - math.sqrt(position.x * position.x + position.z * position.z)
+            local actionRayon = math.sqrt(Mathf.Pow(position.y, 2) + Mathf.Pow(leg.length, 2)) - math.sqrt(position.x * position.x + position.z * position.z)
 
-            I:Log(string.format("creating walking gait for leg %s, centered at %s with width %f", tostring(leg.position), tostring(position), actionRayon * 1.8))
+            I:Log(string.format("creating walking gait for leg %s, centered at %s with width %f", tostring(leg.position), tostring(position), actionRayon * 1.5))
 
             return Gait.Walking.new(position,
-                    angle, math.max(leg.segments[2].len.z * 0.5, GAIT_MIN_HEIGHT), actionRayon * 1.8)
+                    angle, math.max(leg.segments[2].len.z * 0.5, GAIT_MIN_HEIGHT), actionRayon * 1.5)
         end
     },
     -- turning gait, composed of a circle arc on the ground and a elliptic circle arc to return to origin
@@ -367,10 +367,10 @@ Gait = {
                 rotRadius = Vector3.Distance(rotCenter, leg.gaitCenter)
                 angleOffset = 2 * math.pi * Vector3.SignedAngle(Vector3.ProjectOnPlane(spinPosition + leg.gaitCenter, Vector3.up), Vector3.right, Vector3.up) / 360
             end
+            local Ta = math.sqrt(leg.gaitCenter.x * leg.gaitCenter.x + leg.gaitCenter.z * leg.gaitCenter.z);
+            local actionRayon = math.sqrt(Mathf.Pow(leg.gaitCenter.y, 2) + Mathf.Pow(leg.length, 2)) - Ta
 
-            local actionRayon = math.sqrt(math.power(position.y, 2) + math.power(leg.length, 2)) - math.sqrt(position.x * position.x + position.z * position.z)
-
-            local angleTurning = math.atan(actionRayon/math.sqrt(position.x * position.x + position.z * position.z))
+            local angleTurning = math.atan(actionRayon/Ta) * 0.5
 
             I:Log(string.format("creating turning gait for leg %s, rotating around %s with radius %f, turning %f and offset %f", tostring(leg.position), tostring(rotCenter), rotRadius, angleTurning, angleOffset))
 
