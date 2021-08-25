@@ -319,10 +319,12 @@ Gait = {
                 position = leg.gaitCenter
             end
 
-            I:Log(string.format("creating walking gait for leg %s, centered at %s with width %f", tostring(leg.position), tostring(position), leg.segments[3].len.z * 1.2))
+            local actionRayon = math.sqrt(math.power(position.y, 2) + math.power(leg.length, 2)) - math.sqrt(position.x * position.x + position.z * position.z)
+
+            I:Log(string.format("creating walking gait for leg %s, centered at %s with width %f", tostring(leg.position), tostring(position), actionRayon * 1.8))
 
             return Gait.Walking.new(position,
-                    angle, math.max(leg.segments[2].len.z * 0.5, GAIT_MIN_HEIGHT), math.sqrt(position.x * position.x + position.z * position.z))
+                    angle, math.max(leg.segments[2].len.z * 0.5, GAIT_MIN_HEIGHT), actionRayon * 1.8)
         end
     },
     -- turning gait, composed of a circle arc on the ground and a elliptic circle arc to return to origin
@@ -366,12 +368,16 @@ Gait = {
                 angleOffset = 2 * math.pi * Vector3.SignedAngle(Vector3.ProjectOnPlane(spinPosition + leg.gaitCenter, Vector3.up), Vector3.right, Vector3.up) / 360
             end
 
-            I:Log(string.format("creating turning gait for leg %s, rotating around %s with radius %f and offset %f", tostring(leg.position), tostring(rotCenter), rotRadius, angleOffset))
+            local actionRayon = math.sqrt(math.power(position.y, 2) + math.power(leg.length, 2)) - math.sqrt(position.x * position.x + position.z * position.z)
+
+            local angleTurning = math.atan(actionRayon/math.sqrt(position.x * position.x + position.z * position.z))
+
+            I:Log(string.format("creating turning gait for leg %s, rotating around %s with radius %f, turning %f and offset %f", tostring(leg.position), tostring(rotCenter), rotRadius, angleTurning, angleOffset))
 
             return Gait.Turning.new(rotCenter,
                     rotRadius,
-                    angleOffset + math.pi / 12,
-                    -math.pi / 6,
+                    angleOffset + angleTurning,
+                    -2 * angleTurning,
                     math.max(leg.segments[2].len.z * 0.5, GAIT_MIN_HEIGHT)
             )
         end
