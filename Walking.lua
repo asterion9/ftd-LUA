@@ -8,6 +8,7 @@ INPUT_SPINNER_POWER = 0.5  -- the power expected on the input spinners (0 > powe
 -- higher is faster but risk maxing out the spinner speed and hitting ground too strongly (and looking weird)
 GAIT_GROUND_RATIO = 0.7
 GAIT_MIN_HEIGHT = 3  -- min height for the return move of the gait
+GAIT_SIZE_FACTOR = 0.7
 IK_MODEL = {INSECT = 1, HUMAN = 2}
 
 controller = nil
@@ -283,7 +284,7 @@ InputReader = {
     end
 }
 
--- contains all possiblie gaits for a leg, with handy creation method
+-- contains all possible gaits for a leg, with handy creation method
 Gait = {
     -- walking gait, composed of a flat line and an elliptic return to origin
     Walking = {
@@ -310,21 +311,21 @@ Gait = {
             }
         end,
         autoconfig = function(I, leg, angle)
-            local position
+            local posCenter
             if leg.gaitCenter == nil then
                 local legDirection = I:GetSubConstructInfo(leg.segments[1].spinId).LocalPositionRelativeToCom
-                position = legDirection.normalized * ((leg.segments[1].len.z + leg.segments[2].len.z) * 1.2)
-                position.y = -leg.segments[3].len.z + leg.segments[1].len.y - 2
+                posCenter = legDirection.normalized * ((leg.segments[1].len.z + leg.segments[2].len.z) * 1.2)
+                posCenter.y = -leg.segments[3].len.z + leg.segments[1].len.y - 2
             else
-                position = leg.gaitCenter
+                posCenter = leg.gaitCenter
             end
 
-            local actionRayon = math.sqrt(Mathf.Pow(position.y, 2) + Mathf.Pow(leg.length, 2)) - math.sqrt(position.x * position.x + position.z * position.z)
+            local actionRay = math.sqrt(Mathf.Pow(leg.length, 2) - Mathf.Pow(posCenter.y, 2)) - math.sqrt(posCenter.x * posCenter.x + posCenter.z * posCenter.z)
 
-            I:Log(string.format("creating walking gait for leg %s, centered at %s with width %f", tostring(leg.position), tostring(position), actionRayon * 1.5))
+            I:Log(string.format("creating walking gait for leg %s, centered at %s with width %f", tostring(leg.position), tostring(posCenter), actionRay * 2 * GAIT_SIZE_FACTOR))
 
-            return Gait.Walking.new(position,
-                    angle, math.max(leg.segments[2].len.z * 0.5, GAIT_MIN_HEIGHT), actionRayon * 1.5)
+            return Gait.Walking.new(posCenter,
+                    angle, math.max(leg.segments[2].len.z * 0.5, GAIT_MIN_HEIGHT), actionRay * 2 * GAIT_SIZE_FACTOR)
         end
     },
     -- turning gait, composed of a circle arc on the ground and a elliptic circle arc to return to origin
@@ -368,9 +369,9 @@ Gait = {
                 angleOffset = 2 * math.pi * Vector3.SignedAngle(Vector3.ProjectOnPlane(spinPosition + leg.gaitCenter, Vector3.up), Vector3.right, Vector3.up) / 360
             end
             local Ta = math.sqrt(leg.gaitCenter.x * leg.gaitCenter.x + leg.gaitCenter.z * leg.gaitCenter.z);
-            local actionRayon = math.sqrt(Mathf.Pow(leg.gaitCenter.y, 2) + Mathf.Pow(leg.length, 2)) - Ta
+            local actionRay = math.sqrt(Mathf.Pow(leg.length, 2) - Mathf.Pow(leg.gaitCenter.y, 2)) - Ta
 
-            local angleTurning = math.atan(actionRayon/Ta) * 0.5
+            local angleTurning = Mathf.Atan2(actionRay, Ta) * GAIT_SIZE_FACTOR
 
             I:Log(string.format("creating turning gait for leg %s, rotating around %s with radius %f, turning %f and offset %f", tostring(leg.position), tostring(rotCenter), rotRadius, angleTurning, angleOffset))
 
@@ -468,7 +469,7 @@ PrefabLegBuilder = {
                     defaultPhase = (defaultPhase + 0.5) % 1
                     legs[scId] = leg
                     i = i + 1
-                    I:Log(string.format('built leg : position %s, gaitCenter %s, segment length %f', tostring(leg.position), tostring(leg.gaitCenter), leg.length))
+                    I:Log(string.format('built leg : %d segment, position %s, gaitCenter %s, segment length %f', #leg.segments, tostring(leg.position), tostring(leg.gaitCenter), leg.length))
                 end
             end
         end
@@ -490,7 +491,19 @@ PrefabLegBuilder = {
         local leg = {
             position = sc.LocalPositionRelativeToCom,
             segments = {},
-            moveLeg = ikModel,
+            moveLeg = function(leg, I, target, t)
+                local a0, a1, a2, a3 = ikModel(leg, I, target)
+
+                I:Log(string.format('t=%f : moving humanoid leg %d at %s, offset=%d, spinDir=%d to %s with angle a0=%f, a1=%f, a2=%f',
+                            t, leg.segments[1].spinId, tostring(leg.position), leg.segments[1].spinOffset, leg.segments[1].spinDirection, tostring(target), a0, a1, a2))
+
+                leg.segments[1]:setAngle(I, a0, t)
+                leg.segments[2]:setAngle(I, a1, t)
+                leg.segments[3]:setAngle(I, a2, t)
+                if leg.segments[4] ~= nil then
+                    leg.segments[4]:setAngle(I, a3, t)
+                end
+            end,
             gaitCenter = legTemplate.gaitCenter,
             length = length
         }
@@ -521,7 +534,7 @@ PrefabLegBuilder = {
 
 -- helper lib for doing inverse kinematic using a leg config
 IkLib = {
-    moveInsectoidLeg = function(leg, I, target, t)
+    moveInsectoidLeg = function(leg, I, target)
         if target.magnitude > leg.length then
             I:LogToHud(string.format("ERROR : target %s is too far for leg %s !", tostring(target), leg.segments[1].spinId))
         end
@@ -544,14 +557,9 @@ IkLib = {
         local a2 = -math.acos((rMag * rMag - leg.segments[2].len.z * leg.segments[2].len.z - leg.segments[3].len.z * leg.segments[3].len.z)
                 / (2 * leg.segments[2].len.z * leg.segments[3].len.z))
 
-        I:Log(string.format('t=%f : moving insectoid leg %d at %s, offset=%d, spinDir=%d to %s with angle a0=%f, a1=%f, a2=%f',
-                t, leg.segments[1].spinId, tostring(leg.position), leg.segments[1].spinOffset, leg.segments[1].spinDirection, tostring(target), a0, a1, a2))
-
-        leg.segments[1]:setAngle(I, a0, t)
-        leg.segments[2]:setAngle(I, a1, t)
-        leg.segments[3]:setAngle(I, a2, t)
+        return a0, a1, a2, math.PI/2 - a1 - a2
     end,
-    moveHumanoidLeg = function(leg, I, target, t)
+    moveHumanoidLeg = function(leg, I, target)
         if target.magnitude > leg.length then
             I:LogToHud(string.format("ERROR : target %s is too far for leg %s !", tostring(target), leg.segments[1].spinId))
         end
@@ -563,7 +571,7 @@ IkLib = {
         local a0 = (target.x > 0 and 1 or -1) * math.acos(-target.y / math.sqrt(target.x * target.x + target.y * target.y))
 
         local rx = -target.y / math.cos(a0) - leg.segments[1].len.z
-        local ry = -target.z
+        local ry = target.z
         local rMag = math.sqrt(rx * rx + ry * ry)
 
         local a1 = (ry > 0 and 1 or -1) * math.acos(rx / rMag)
@@ -574,12 +582,7 @@ IkLib = {
         local a2 = -math.acos((rMag * rMag - leg.segments[2].len.z * leg.segments[2].len.z - leg.segments[3].len.z * leg.segments[3].len.z)
                 / (2 * leg.segments[2].len.z * leg.segments[3].len.z))
 
-        I:Log(string.format('t=%f : moving humanoid leg %d at %s, offset=%d, spinDir=%d to %s with angle a0=%f, a1=%f, a2=%f',
-                t, leg.segments[1].spinId, tostring(leg.position), leg.segments[1].spinOffset, leg.segments[1].spinDirection, tostring(target), a0, a1, a2))
-
-        leg.segments[1]:setAngle(I, a0, t)
-        leg.segments[2]:setAngle(I, a1, t)
-        leg.segments[3]:setAngle(I, a2, t)
+        return a0, a1, a2, - a1 - a2
     end
 }
 
