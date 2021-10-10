@@ -93,7 +93,7 @@ Controller = {
         local legGaits = {}
         for id, leg in pairs(legs) do
             legGaits[leg] = {
-                Walking = Gait.Walking.autoconfig(I, leg, -math.pi / 2),
+                Walking = Gait.Walking.autoconfig(I, leg, -Mathf.PI / 2),
                 Strafing = Gait.Walking.autoconfig(I, leg, 0),
                 Turning = Gait.Turning.autoconfig(I, leg),
                 Resting = Gait.Resting.autoconfig(I, leg)
@@ -302,8 +302,8 @@ Gait = {
                     else
                         local te = 0.5 - 0.5 * (t - groundRatio) / (1 - groundRatio)
                         target = Vector3(
-                                position.x + math.cos(te * math.pi * 2) * (width / 2),
-                                position.y + math.sin(te * math.pi * 2) * height,
+                                position.x + math.cos(te * Mathf.PI * 2) * (width / 2),
+                                position.y + math.sin(te * Mathf.PI * 2) * height,
                                 position.z)
                     end
                     return rotateAround(target, yAngle, position)
@@ -344,10 +344,10 @@ Gait = {
                                 center.z + radius * math.sin(radStart + (radLength * (tg))))
                     else
                         local tv = 0.5 * (t - groundRatio) / (1 - groundRatio)
-                        local th = (1 + math.cos(tv * math.pi * 2)) / 2;
+                        local th = (1 + math.cos(tv * Mathf.PI * 2)) / 2;
                         return Vector3(
                                 center.x + radius * math.cos(radStart + (radLength * th)),
-                                center.y + math.sin(tv * math.pi * 2) * height,
+                                center.y + math.sin(tv * Mathf.PI * 2) * height,
                                 center.z + radius * math.sin(radStart + (radLength * th)));
                     end
                 end
@@ -362,16 +362,16 @@ Gait = {
             if leg.gaitCenter == nil then
                 rotCenter = Vector3(-spinPosition.x, -leg.segments[3].len.z + leg.segments[1].len.y - 2, -spinPosition.z)
                 rotRadius = math.sqrt(spinPosition.x * spinPosition.x + spinPosition.z * spinPosition.z) + leg.segments[1].len.z + leg.segments[2].len.z
-                angleOffset = 2 * math.pi * Vector3.SignedAngle(Vector3.ProjectOnPlane(spinPosition, Vector3.up), Vector3.right, Vector3.up) / 360
+                angleOffset = 2 * Mathf.PI * Vector3.SignedAngle(Vector3.ProjectOnPlane(spinPosition, Vector3.up), Vector3.right, Vector3.up) / 360
             else
                 rotCenter = Vector3(-spinPosition.x, leg.gaitCenter.y, -spinPosition.z)
                 rotRadius = Vector3.Distance(rotCenter, leg.gaitCenter)
-                angleOffset = 2 * math.pi * Vector3.SignedAngle(Vector3.ProjectOnPlane(spinPosition + leg.gaitCenter, Vector3.up), Vector3.right, Vector3.up) / 360
+                angleOffset = 2 * Mathf.PI * Vector3.SignedAngle(Vector3.ProjectOnPlane(spinPosition + leg.gaitCenter, Vector3.up), Vector3.right, Vector3.up) / 360
             end
             local Ta = math.sqrt(leg.gaitCenter.x * leg.gaitCenter.x + leg.gaitCenter.z * leg.gaitCenter.z);
             local actionRay = math.sqrt(Mathf.Pow(leg.length, 2) - Mathf.Pow(leg.gaitCenter.y, 2)) - Ta
 
-            local angleTurning = Mathf.Atan2(actionRay, Ta) * GAIT_SIZE_FACTOR
+            local angleTurning = Mathf.Atan2(actionRay, Ta + math.sqrt(spinPosition.x * spinPosition.x + spinPosition.z * spinPosition.z)) * GAIT_SIZE_FACTOR
 
             I:Log(string.format("creating turning gait for leg %s, rotating around %s with radius %f, turning %f and offset %f", tostring(leg.position), tostring(rotCenter), rotRadius, angleTurning, angleOffset))
 
@@ -427,7 +427,7 @@ Segment = {
                 self.lastUpdate = t
                 self.lastAngle = angle
                 I:SetSpinBlockContinuousSpeed(self.spinId, 30)
-                local angleDeg = 360 * angle / (2 * math.pi)
+                local angleDeg = 360 * angle / (2 * Mathf.PI)
                 I:SetSpinBlockRotationAngle(self.spinId, self.spinDirection * (angleDeg + self.spinOffset))
             end
         }
@@ -557,7 +557,7 @@ IkLib = {
         local a2 = -math.acos((rMag * rMag - leg.segments[2].len.z * leg.segments[2].len.z - leg.segments[3].len.z * leg.segments[3].len.z)
                 / (2 * leg.segments[2].len.z * leg.segments[3].len.z))
 
-        return a0, a1, a2, math.PI/2 - a1 - a2
+        return a0, a1, a2, Mathf.PI/2 - a1 - a2
     end,
     moveHumanoidLeg = function(leg, I, target)
         if target.magnitude > leg.length then
