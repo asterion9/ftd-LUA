@@ -25,17 +25,17 @@ function buildArms(I)
     local segment0Right = { len = Vector3(0, -4, 4), spinOffset = 0, spinDirection = -1 }
     local segment0Left = { len = Vector3(0, -4, 4), spinOffset = 180, spinDirection = -1 }
     local segment1 = { len = Vector3(0, 0, 6), spinOffset = 0, spinDirection = 1 }
-    local segment2 = { len = Vector3(0, 4, 11.5), spinOffset = -19.2, spinDirection = -1 }
+    local segment2 = { len = Vector3(0,  0, 12.18), spinOffset = -19.2, spinDirection = -1 }
     return PrefabLegBuilder.buildLegs(I,
             {
-                { gaitCenter = Vector3(8.5, -7.5, -5), segments = { segment0Right, segment1, segment2 } }, -- bottom right
-                { gaitCenter = Vector3(10, -7.5, 0), segments = { segment0Right, segment1, segment2 } }, -- middle bottom right
-                { gaitCenter = Vector3(10, -7.5, 0), segments = { segment0Right, segment1, segment2 } }, -- middle top right
-                { gaitCenter = Vector3(8.5, -7.5, 5), segments = { segment0Right, segment1, segment2 } }, -- top right
-                { gaitCenter = Vector3(-8.5, -7.5, 5), segments = { segment0Left, segment1, segment2 } }, -- top left
-                { gaitCenter = Vector3(-10, -7.5, 0), segments = { segment0Left, segment1, segment2 } }, -- middle top left
-                { gaitCenter = Vector3(-10, -7.5, 0), segments = { segment0Left, segment1, segment2 } }, -- middle bottom left
-                { gaitCenter = Vector3(-8.5, -7.5, -5), segments = { segment0Left, segment1, segment2 } }  -- bottom left
+                { gaitCenter = Vector3(8.5, -11, -5), segments = { segment0Right, segment1, segment2 } }, -- bottom right
+                { gaitCenter = Vector3(10, -11, 0), segments = { segment0Right, segment1, segment2 } }, -- middle bottom right
+                { gaitCenter = Vector3(10, -11, 0), segments = { segment0Right, segment1, segment2 } }, -- middle top right
+                { gaitCenter = Vector3(8.5, -11, 5), segments = { segment0Right, segment1, segment2 } }, -- top right
+                { gaitCenter = Vector3(-8.5, -11, 5), segments = { segment0Left, segment1, segment2 } }, -- top left
+                { gaitCenter = Vector3(-10, -11, 0), segments = { segment0Left, segment1, segment2 } }, -- middle top left
+                { gaitCenter = Vector3(-10, -11, 0), segments = { segment0Left, segment1, segment2 } }, -- middle bottom left
+                { gaitCenter = Vector3(-8.5, -11, -5), segments = { segment0Left, segment1, segment2 } }  -- bottom left
             })
 end
 
@@ -44,43 +44,34 @@ Adjuster = {
     new = function(I, legs)
         return {
             comAdjust = Vector3.zero,
-            maxOffset = legs[next(legs)].segments[2].len.z * 0.2,
+            maxOffset = legs[next(legs)].segments[2].len.z * 0.4,
             legOffsets = {},
             getForLeg = function(self, leg)
-                local legOffset = self.legOffsets[leg]
+                local legOffset = Vector3(0, self.legOffsets[leg], 0)
                 if (legOffset == nil) then
                     legOffset = Vector3.zero
                 end
                 return self.comAdjust + legOffset
             end,
-            calculateLegOffsets = function(self, I, legTargets, t)
-                local vehiculeWorldPosition = I:GetConstructCenterOfMass() + I:GetVelocityVector() * t
-                --local vehiculeWorldRotation = Quaternion.LookRotation(I:GetConstructForwardVector(), I:GetConstructUpVector())
-                local vehiculeWorldRotation = Quaternion.AngleAxis(I:GetConstructYaw(), Vector3.up)
-                local n = 0
-                local offset = 0
+            calculateLegOffsets = function(self, I, legTargets, stepTime)
+                local vehicleWorldPosition = I:GetConstructCenterOfMass() + I:GetVelocityVector() * stepTime
+                local vehicleWorldRotationVector = Vector3((I:GetConstructPitch() + 360) % 360,
+                        (I:GetConstructYaw() + 360) % 360,
+                        (I:GetConstructRoll() + 360) % 360)-- + I:GetAngularVelocity() * stepTime
+                local vehicleWorldRotation = Quaternion.Euler(vehicleWorldRotationVector)
                 self.legOffsets = {}
+                local log = ""
                 for leg, target in pairs(legTargets) do
                     local targetLocalPosition = leg.position + target
-                    local targetWorldPos = vehiculeWorldPosition + vehiculeWorldRotation * targetLocalPosition
+                    local targetWorldPos = vehicleWorldPosition + vehicleWorldRotation * targetLocalPosition
                     local heightDiff = targetWorldPos.y - I:GetTerrainAltitudeForPosition(targetWorldPos.x, targetWorldPos.y, targetWorldPos.z)
-                    self.legOffsets[leg] = heightDiff
-                    offset = offset + heightDiff
-                    n = n + 1
-                end
-                local meanOffset = offset / n
-                local log = string.format("mean=%f, ", meanOffset)
-                for leg, heightDiff in pairs(self.legOffsets) do
-                    log = log .. string.format(" leg%d=%f ", leg.segments[1].spinId, heightDiff)
+                    log = log .. string.format("heightDiff=%f, ", heightDiff)
+
+                    if(heightDiff < 0) then
+                        self.legOffsets[leg] = -heightDiff*0.95
+                    end
                 end
                 I:Log(log)
-                for leg, heightDiff in pairs(self.legOffsets) do
-                    local legOffset = heightDiff - meanOffset
-                    if (math.abs(legOffset) > self.maxOffset) then
-                        legOffset = self.maxOffset * legOffset / math.abs(legOffset)
-                    end
-                    self.legOffsets[leg] = Vector3(0, -legOffset, 0)
-                end
             end
         }
     end
@@ -152,7 +143,7 @@ Controller = {
         return {
             legGaits = legGaits,
             cps = CONTROLLER_CPS, -- cycles per second
-            --comAdjuster = Adjuster.new(I, legs),
+            comAdjuster = Adjuster.new(I, legs),
             lastTime = I:GetGameTime(),
             curTurn = 0,
             commandReader = InputReader.new(I),
@@ -167,10 +158,10 @@ Controller = {
                     local target = Controller.calculateTarget(leg, gaits, curStep, inputs.forward, inputs.yaw, inputs.strafe)
                     legTargets[leg] = target
                 end
-                --self.comAdjuster:calculateLegOffsets(I, legTargets, curTime - self.lastTime)
+                self.comAdjuster:calculateLegOffsets(I, legTargets, curTime - self.lastTime)
                 for leg, target in pairs(legTargets) do
-                    --leg:moveLeg(I, target + self.comAdjuster:getForLeg(leg), curTime)
-                    leg:moveLeg(I, target, curTime)
+                    leg:moveLeg(I, target + self.comAdjuster:getForLeg(leg), curTime)
+                    --leg:moveLeg(I, target, curTime)
                 end
                 self.lastTime = curTime
             end,
@@ -546,7 +537,7 @@ IkLib = {
         local a0 = (target.z > 0 and -1 or 1) * math.acos(target.x / math.sqrt(target.x * target.x + target.z * target.z))
 
         local rx = target.x / math.cos(a0) - leg.segments[1].len.z
-        local ry = target.y
+        local ry = target.y - leg.segments[1].len.y
         local rMag = math.sqrt(rx * rx + ry * ry)
 
         local a1 = (ry > 0 and 1 or -1) * math.acos(rx / rMag)
