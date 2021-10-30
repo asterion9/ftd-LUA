@@ -6,7 +6,7 @@ The goal of this project is to create walking vehicles that can be driven by the
 use the sticky foot as propulsion, have realistic leg movements, 
 and don't rely on powered stabilization or propulsion.
 ## Operation
-This is achieved via the LUA box component. 
+This is achieved via the Lua box component. 
 The code will first look for spinner placed in succession that form legs, 
 it will use the template provided to build a model of the legs with some level of automatic configuration.
 Then at each game loop, it will read the inputted commands from AI or player, 
@@ -49,9 +49,9 @@ it is recommended to :
 * Use 6 or more leg (4 is possible, but the craft will not be stable while half of the legs are up)
 * Have each set of leg that are on the ground at the same time should have a center of lift and thrust that coincides with the center of mass of the vehicle
 ## Input relay
-In the current version, LUA does not support listening on all available input, especially forward/backward command.
+In the current version, Lua does not support listening on all available input, especially forward/backward command.
 In order to bypass this limitation, a spinner block is placed, which will turn on these command, 
-which can then be interpreted by the LUA box.
+which can then be interpreted by the Lua box.
 To use the forward/backward command (used by the AI) : 
 * Place a spinner block on the main structure, in the upward position, oriented toward the front of the vehicle
 * Using shift + n, name the spinner block "forwarder"
@@ -61,9 +61,9 @@ To use the forward/backward command (used by the AI) :
 * Set all response to command to 0
 * Set response to forward/backward to 1
 * Set power to 0.5
-## LUA
+## Lua
 ### Configuration
-Place a LUA block and copy the [code](Walking.lua) into it.
+Place a Lua block and copy the [code](Walking.lua) into it.
 The parameters at the top can be let as is, you may wish to change CONTROLLER_CPS after all is working well to further tune the vehicle.
 Replace the leg configuration in the buildArms function with your own, the params are as follows :
 ```
