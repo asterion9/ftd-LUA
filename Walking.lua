@@ -537,7 +537,12 @@ IkLib = {
         local a0 = (target.z > 0 and -1 or 1) * math.acos(target.x / math.sqrt(target.x * target.x + target.z * target.z))
 
         local rx = target.x / math.cos(a0) - leg.segments[1].len.z
+        -- if segment 1 (the first one) is going up/down (has y component), it must be taken into account
+        -- for calculating the up/down on the plane
         local ry = target.y - leg.segments[1].len.y
+        if leg.segments[4] then
+            ry = ry + leg.segments[4].len.z
+        end
         local rMag = math.sqrt(rx * rx + ry * ry)
 
         local a1 = (ry > 0 and 1 or -1) * math.acos(rx / rMag)
@@ -562,7 +567,10 @@ IkLib = {
         local a0 = (target.x > 0 and 1 or -1) * math.acos(-target.y / math.sqrt(target.x * target.x + target.y * target.y))
 
         local rx = -target.y / math.cos(a0) - leg.segments[1].len.z
-        local ry = target.z
+        if leg.segments[4] then
+            rx = rx - math.cos(a0) * leg.segments[4].len.z
+        end
+        local ry = target.z - leg.segments[1].len.y
         local rMag = math.sqrt(rx * rx + ry * ry)
 
         local a1 = (ry > 0 and 1 or -1) * math.acos(rx / rMag)
