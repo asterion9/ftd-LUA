@@ -9,7 +9,7 @@ INPUT_SPINNER_POWER = 0.5  -- the power expected on the input spinners (0 > powe
 GAIT_GROUND_RATIO = 0.7
 GAIT_MIN_HEIGHT = 3  -- min height for the return move of the gait
 GAIT_SIZE_FACTOR = 0.7
-IK_MODEL = {INSECT = 1, HUMAN = 2}
+IK_MODEL = {INSECT = 1, HUMAN = 2, CHICKEN = 3}
 
 controller = nil
 
@@ -476,6 +476,8 @@ PrefabLegBuilder = {
         local ikModel
         if legTemplate.ikModel == IK_MODEL.HUMAN then
             ikModel = IkLib.moveHumanoidLeg
+        elseif legTemplate.ikModel == IK_MODEL.CHICKEN then
+            ikModel = IkLib.moveChickenLeg
         else
             ikModel = IkLib.moveInsectoidLeg
         end
@@ -579,6 +581,34 @@ IkLib = {
                         / (2 * leg.segments[2].len.z * rMag))
 
         local a2 = -math.acos((rMag * rMag - leg.segments[2].len.z * leg.segments[2].len.z - leg.segments[3].len.z * leg.segments[3].len.z)
+                / (2 * leg.segments[2].len.z * leg.segments[3].len.z))
+
+        return a0, a1, a2, - a1 - a2
+    end,
+    moveChickenLeg = function(leg, I, target)
+        if target.magnitude > leg.length then
+            I:LogToHud(string.format("ERROR : target %s is too far for leg %s !", tostring(target), leg.segments[1].spinId))
+        end
+
+        if target.magnitude < leg.segments[1].len.z then
+            I:LogToHud(string.format("ERROR : target %s is too close for leg %s !", tostring(target), leg.segments[1].spinId))
+        end
+
+        local a0 = (target.x > 0 and 1 or -1) * math.acos(-target.y / math.sqrt(target.x * target.x + target.y * target.y))
+
+        local rx = -target.y / math.cos(a0) - leg.segments[1].len.z
+        if leg.segments[4] then
+            rx = rx - math.cos(a0) * leg.segments[4].len.z
+        end
+        local ry = target.z - leg.segments[1].len.y
+        local rMag = math.sqrt(rx * rx + ry * ry)
+
+        local a1 = (ry > 0 and 1 or -1) * math.acos(rx / rMag)
+                - math.acos(
+                (leg.segments[2].len.z * leg.segments[2].len.z + rMag * rMag - leg.segments[3].len.z * leg.segments[3].len.z)
+                        / (2 * leg.segments[2].len.z * rMag))
+
+        local a2 = math.acos((rMag * rMag - leg.segments[2].len.z * leg.segments[2].len.z - leg.segments[3].len.z * leg.segments[3].len.z)
                 / (2 * leg.segments[2].len.z * leg.segments[3].len.z))
 
         return a0, a1, a2, - a1 - a2
