@@ -8,8 +8,16 @@ INPUT_SPINNER_POWER = 0.5  -- the power expected on the input spinners (0 > powe
 -- higher is faster but risk maxing out the spinner speed and hitting ground too strongly (and looking weird)
 GAIT_GROUND_RATIO = 0.7
 GAIT_MIN_HEIGHT = 3  -- min height for the return move of the gait
-GAIT_SIZE_FACTOR = 0.7
-IK_MODEL = {INSECT = 1, HUMAN = 2, CHICKEN = 3}
+GAIT_SIZE_FACTOR = 0.7  -- global size factor for the gait (1 is default, 0 is total disable)
+GAIT_FORWARD_FACTOR = 1  -- forward size factor for the gait (1 is default, 0 is total disable)
+GAIT_STRAFE_FACTOR = 1  -- strafe size factor for the gait (1 is default, 0 is total disable)
+GAIT_YAW_FACTOR = 1  -- yaw size factor for the gait (1 is default, 0 is total disable)
+
+IK_MODEL = {INSECT = 1, HUMAN = 2, CHICKEN = 3}  -- model for leg, INSECT is horizontal, HUMAN is vertical with forward knee, CHICKEN is vertical with inverse knee
+
+ADJUSTER_HEIGHT_OFFSET = 0.4  -- offset between the calculated foot position and the actual, should be 0 when well configured, but sometimes around that
+ADJUSTER_SPRING_STRENGTH = 0.98  -- strength of the adjuster software spring, 0 means infinite strength, 1 means no strength
+
 
 controller = nil
 
@@ -39,7 +47,6 @@ function buildArms(I)
             })
 end
 
--- WIP : adjust each leg height individually by checking the terrain height, acting as a manual suspension
 Adjuster = {
     new = function(I, legs)
         return {
@@ -67,8 +74,8 @@ Adjuster = {
                     local heightDiff = targetWorldPos.y - I:GetTerrainAltitudeForPosition(targetWorldPos.x, targetWorldPos.y, targetWorldPos.z)
                     log = log .. string.format("heightDiff=%f, ", heightDiff)
 
-                    if(heightDiff < 0) then
-                        self.legOffsets[leg] = -heightDiff*0.95
+                    if(heightDiff < ADJUSTER_HEIGHT_OFFSET) then
+                        self.legOffsets[leg] = -heightDiff*ADJUSTER_SPRING_STRENGTH
                     end
                 end
                 I:Log(log)
@@ -98,9 +105,9 @@ Controller = {
         local sTarget
         local yTarget
         local rTarget = gaits['Resting'].getPoint((curStep + leg.phase) % 1)
-        local fRatio = math.abs(forward)
-        local sRatio = math.abs(strafe)
-        local yRatio = math.abs(yaw)
+        local fRatio = math.abs(forward) * GAIT_SIZE_FACTOR * GAIT_FORWARD_FACTOR
+        local sRatio = math.abs(strafe) * GAIT_SIZE_FACTOR * GAIT_STRAFE_FACTOR
+        local yRatio = math.abs(yaw) * GAIT_SIZE_FACTOR * GAIT_YAW_FACTOR
         local fDirection = Mathf.Sign(forward)
         local sDirection = Mathf.Sign(strafe)
         local yDirection = Mathf.Sign(yaw)
@@ -362,12 +369,12 @@ Gait = {
             local Ta = math.sqrt(leg.gaitCenter.x * leg.gaitCenter.x + leg.gaitCenter.z * leg.gaitCenter.z);
             local actionRay = math.sqrt(Mathf.Pow(leg.length, 2) - Mathf.Pow(leg.gaitCenter.y, 2)) - Ta
 
-            local angleTurning = Mathf.Atan2(actionRay, Ta + math.sqrt(spinPosition.x * spinPosition.x + spinPosition.z * spinPosition.z)) * GAIT_SIZE_FACTOR
+            local angleTurning = Mathf.Atan2(actionRay, Ta + math.sqrt(spinPosition.x * spinPosition.x + spinPosition.z * spinPosition.z))
 
             I:Log(string.format("creating turning gait for leg %s, rotating around %s with radius %f, turning %f and offset %f", tostring(leg.position), tostring(rotCenter), rotRadius, angleTurning, angleOffset))
 
             return Gait.Turning.new(rotCenter,
-                    rotRadius,
+                    rotRadius * GAIT_SIZE_FACTOR,
                     angleOffset + angleTurning,
                     -2 * angleTurning,
                     math.max(leg.segments[2].len.z * 0.5, GAIT_MIN_HEIGHT)
