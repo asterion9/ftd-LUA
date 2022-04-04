@@ -71,10 +71,10 @@ Adjuster = {
                 for leg, target in pairs(legTargets) do
                     local targetLocalPosition = leg.position + target
                     local targetWorldPos = vehicleWorldPosition + vehicleWorldRotation * targetLocalPosition
-                    local heightDiff = targetWorldPos.y - I:GetTerrainAltitudeForPosition(targetWorldPos.x, targetWorldPos.y, targetWorldPos.z)
+                    local heightDiff = targetWorldPos.y - ADJUSTER_HEIGHT_OFFSET - I:GetTerrainAltitudeForPosition(targetWorldPos.x, targetWorldPos.y, targetWorldPos.z)
                     log = log .. string.format("heightDiff=%f, ", heightDiff)
 
-                    if(heightDiff < ADJUSTER_HEIGHT_OFFSET) then
+                    if(heightDiff < 0) then
                         self.legOffsets[leg] = -heightDiff*ADJUSTER_SPRING_STRENGTH
                     end
                 end
@@ -134,7 +134,7 @@ Controller = {
 
         if (wTarget ~= nil) then
             if (yTarget ~= nil) then
-                return (wTarget + yTarget) / 2
+                return (wTarget + yTarget) - leg.gaitCenter
             else
                 return wTarget
             end
