@@ -7,16 +7,16 @@ INPUT_SPINNER_POWER = 0.5  -- the power expected on the input spinners (0 > powe
 -- the ratio fo time a leg spend on ground vs returning to the start point.
 -- higher is faster but risk maxing out the spinner speed and hitting ground too strongly (and looking weird)
 GAIT_GROUND_RATIO = 0.7
-GAIT_MIN_HEIGHT = 3  -- min height for the return move of the gait
+GAIT_MIN_HEIGHT = 4  -- min height for the return move of the gait
 GAIT_SIZE_FACTOR = 0.7  -- global size factor for the gait (1 is default, 0 is total disable)
 GAIT_FORWARD_FACTOR = 1  -- forward size factor for the gait (1 is default, 0 is total disable)
-GAIT_STRAFE_FACTOR = 1  -- strafe size factor for the gait (1 is default, 0 is total disable)
-GAIT_YAW_FACTOR = 1  -- yaw size factor for the gait (1 is default, 0 is total disable)
+GAIT_STRAFE_FACTOR = 0.7  -- strafe size factor for the gait (1 is default, 0 is total disable)
+GAIT_YAW_FACTOR = 0.7  -- yaw size factor for the gait (1 is default, 0 is total disable)
 
 IK_MODEL = {INSECT = 1, HUMAN = 2, CHICKEN = 3}  -- model for leg, INSECT is horizontal, HUMAN is vertical with forward knee, CHICKEN is vertical with inverse knee
 
 ADJUSTER_HEIGHT_OFFSET = 0.4  -- offset between the calculated foot position and the actual, should be 0 when well configured, but sometimes around that
-ADJUSTER_SPRING_STRENGTH = 0.98  -- strength of the adjuster software spring, 0 means infinite strength, 1 means no strength
+ADJUSTER_SPRING_STRENGTH = 0.9  -- strength of the adjuster software spring, 0 means infinite strength, 1 means no strength
 
 
 controller = nil
@@ -29,22 +29,19 @@ function Update(I)
 end
 
 function buildArms(I)
-    --marauder 8 legs
-    local segment0Right = { len = Vector3(0, -4, 4), spinOffset = 0, spinDirection = -1 }
-    local segment0Left = { len = Vector3(0, -4, 4), spinOffset = 180, spinDirection = -1 }
-    local segment1 = { len = Vector3(0, 0, 6), spinOffset = 0, spinDirection = 1 }
-    local segment2 = { len = Vector3(0,  0, 12.18), spinOffset = -19.2, spinDirection = -1 }
+    --spot 4 legs
+
+    local segment0 = { len = Vector3(0, 0, 1), spinOffset = 0, spinDirection = 1 }
+    local segment1 = { len = Vector3(0, 0, 15), spinOffset = 0, spinDirection = 1 }
+    local segment2 = { len = Vector3(0, 0, 17), spinOffset = 0, spinDirection = 1 }
+    local segment3 = { len = Vector3(0, 0, 2.5), spinOffset = 0, spinDirection = 1 }
     return PrefabLegBuilder.buildLegs(I,
-            {
-                { gaitCenter = Vector3(8.5, -11, -5), segments = { segment0Right, segment1, segment2 } }, -- bottom right
-                { gaitCenter = Vector3(10, -11, 0), segments = { segment0Right, segment1, segment2 } }, -- middle bottom right
-                { gaitCenter = Vector3(10, -11, 0), segments = { segment0Right, segment1, segment2 } }, -- middle top right
-                { gaitCenter = Vector3(8.5, -11, 5), segments = { segment0Right, segment1, segment2 } }, -- top right
-                { gaitCenter = Vector3(-8.5, -11, 5), segments = { segment0Left, segment1, segment2 } }, -- top left
-                { gaitCenter = Vector3(-10, -11, 0), segments = { segment0Left, segment1, segment2 } }, -- middle top left
-                { gaitCenter = Vector3(-10, -11, 0), segments = { segment0Left, segment1, segment2 } }, -- middle bottom left
-                { gaitCenter = Vector3(-8.5, -11, -5), segments = { segment0Left, segment1, segment2 } }  -- bottom left
-            })
+                {
+                    { phase = 0.25, ikModel = IK_MODEL.CHICKEN, gaitCenter = Vector3(0, -24, 0), segments = { segment0, segment1, segment2, segment3 } }, -- bottom right
+                    { phase = 0, ikModel = IK_MODEL.CHICKEN, gaitCenter = Vector3(0, -24, 0), segments = { segment0, segment1, segment2, segment3 } }, -- top right
+                    { phase = 0.5, ikModel = IK_MODEL.CHICKEN, gaitCenter = Vector3(0, -24, 0), segments = { segment0, segment1, segment2, segment3 } }, -- top left
+                    { phase = 0.75, ikModel = IK_MODEL.CHICKEN, gaitCenter = Vector3(0, -24, 0), segments = { segment0, segment1, segment2, segment3 } }  -- bottom left
+                })
 end
 
 Adjuster = {
